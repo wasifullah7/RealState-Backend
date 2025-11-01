@@ -3,6 +3,7 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
@@ -16,17 +17,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Install only Chromium (not Firefox) to reduce build time and image size
 RUN playwright install --with-deps chromium
 
-# Copy application code
+# Copy application code (excluding files in .dockerignore)
 COPY . .
 
-# Clean up any temporary files
-RUN find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
+# Clean up any temporary files and reduce image size
+RUN find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true && \
+    find . -type f -name "*.pyc" -delete && \
+    find . -type f -name "*.pyo" -delete
 
 EXPOSE 8000
 
