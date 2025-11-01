@@ -1,19 +1,20 @@
 fastapi
 uvicorn
+requests
+pandas
+python-multipart
+jinja2
+aiofiles
 pydantic
 numpy
 faiss-cpu # or faiss-gpu if you have a GPU
 sentence-transformers
 Pillow
-requests
-beautifulsoup4 # New for web scraping
+beautifulsoup4 
 tqdm
 Flask
 Flask-CORS
 reportlab # For PDF export
-pandas # For CSV export
-jinja2
-python-multipart
 playwright
 playwright-stealth
 motor

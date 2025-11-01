@@ -9,11 +9,11 @@ OUT_META = os.path.join("data", "rentals_meta.json")
 
 
 def main():
-    print(f"📂 Loading rentals from {DATA_IN}")
+    print(f" Loading rentals from {DATA_IN}")
     with open(DATA_IN, "r", encoding="utf-8") as f:
         rentals = json.load(f).get("rental_listings", [])
 
-    print("🖼️ Embedding images ...")
+    print(" Embedding images ...")
     for r in tqdm(rentals, desc="images"):
         imgs = r.get("images", [])
         sub_embs = []
@@ -37,7 +37,7 @@ def main():
 
     with open(OUT_META, "w", encoding="utf-8") as f:
         json.dump(rentals, f, ensure_ascii=False, indent=2)
-    print(f"✅ Rental image embeddings precomputed and saved -> {OUT_META}")
+    print(f" Rental image embeddings precomputed and saved -> {OUT_META}")
 
 
 if __name__ == "__main__":

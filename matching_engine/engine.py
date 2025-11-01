@@ -54,11 +54,14 @@ def _embed_sale(sale):
 
     return text_emb, image_avg
 
-def compute_final_scores(sale, candidate_idxs):
+def compute_final_scores(sale, candidate_idxs, sale_text_emb=None, sale_image_avg=None):
+
+    if sale_text_emb is None or sale_image_avg is None:
+        sale_text_emb, sale_image_avg = _embed_sale(sale)
+    
     sale_price = sale.get("price")
     sale_rooms = sale.get("rooms")
     sale_location = sale.get("location")
-    sale_text_emb, sale_image_avg = _embed_sale(sale)
 
     results = []
     for idx in candidate_idxs:
@@ -95,10 +98,19 @@ def compute_final_scores(sale, candidate_idxs):
 
     return sorted(results, key=lambda x: x["final_score"], reverse=True)
 
-def match_sale_to_rentals(sale: dict, top_k_text=120, top_k_image=120, final_candidate_limit=200):
+def match_sale_to_rentals(sale: dict, top_k_text=50, top_k_image=50, final_candidate_limit=100):
+
+    import time
+    start_time = time.time()
+    
     load_indexes()
+    
+    sale_text_emb, sale_image_avg = _embed_sale(sale)
+    embed_time = time.time() - start_time
+    
     text_hits = [i for i, _ in search_text_topk(sale.get("desc", ""), top_k=top_k_text)]
     image_hits = [i for i, _ in search_image_topk_from_urls(sale.get("images", []), top_k=top_k_image)]
+    search_time = time.time() - start_time - embed_time
 
     seen, candidates = {}, []
     for i in text_hits + image_hits:
@@ -106,15 +118,17 @@ def match_sale_to_rentals(sale: dict, top_k_text=120, top_k_image=120, final_can
             seen[i] = True
             candidates.append(i)
     if not candidates:
-        candidates = list(range(min(200, len(_rentals_meta))))
+        candidates = list(range(min(100, len(_rentals_meta))))
+    
+    print(f" Performance: Embed={embed_time:.2f}s, Search={search_time:.2f}s, Candidates={len(candidates)}")
 
-    return compute_final_scores(sale, candidates)
+    return compute_final_scores(sale, candidates, sale_text_emb, sale_image_avg)
 
 class MatchingEngine:
     def __init__(self):
         load_indexes()
 
-    def match_sale_to_rentals(self, sale_listing, top_k=5):
+    def match_sale_to_rentals(self, sale_listing, top_k=10):
         results = match_sale_to_rentals(sale_listing)
         seen_urls = set()
         unique_results = []

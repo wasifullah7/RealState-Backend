@@ -34,7 +34,7 @@ def test_build_and_match():
     # Step 3: Run search
     results = match_sale_to_rentals(sale, top_k_text=20, top_k_image=20, final_candidate_limit=30)
     assert isinstance(results, list) and len(results) > 0
-    print("🏆 Top result:", results[0])
+    print(" Top result:", results[0])
 
 
 if __name__ == "__main__":
