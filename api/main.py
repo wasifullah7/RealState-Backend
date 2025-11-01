@@ -26,12 +26,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS origins - support both local development and production
 origins = [
     "http://localhost:5173",  
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# Add production frontend URL from environment variable
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
+    # Also support https if http is provided
+    if frontend_url.startswith("http://"):
+        origins.append(frontend_url.replace("http://", "https://"))
+    elif frontend_url.startswith("https://"):
+        origins.append(frontend_url.replace("https://", "http://"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,4 +87,5 @@ app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8005)
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)

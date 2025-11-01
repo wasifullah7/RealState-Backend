@@ -20,3 +20,4 @@ playwright-stealth
 motor
 passlib[bcrypt]
 email-validator
+python-dotenv
