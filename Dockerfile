@@ -1,30 +1,32 @@
 
 FROM python:3.11-slim
 
-
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-
 WORKDIR /app
 
-
-RUN apt-get update && apt-get install -y \
+# Install system dependencies in a single layer to reduce image size
+RUN apt-get update && apt-get install -y --no-install-recommends \
     wget gnupg unzip curl \
     libnss3 libnspr4 libx11-6 libx11-xcb1 libxcomposite1 libxdamage1 \
     libxrandr2 libxext6 libxfixes3 libxi6 libxrender1 libxss1 libglib2.0-0 \
     libdbus-1-3 libxtst6 libxshmfence1 xvfb fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
 
-
+# Copy requirements first for better Docker layer caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
+# Install only Chromium (not Firefox) to reduce build time and image size
+RUN playwright install --with-deps chromium
 
-RUN playwright install --with-deps chromium firefox
-
-
+# Copy application code
 COPY . .
+
+# Clean up any temporary files
+RUN find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true
 
 EXPOSE 8000
 
